@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>NOQTA — Wear the Dot. Own the Move.</title>
+<link rel="icon" href="noqta-logo.png" />
+<style>
+  :root{
+    --bg:#0d0d0d; --fg:#ffffff; --muted:#9a9a9a; --accent:#000000;
+    --brand:#111111; --card:#151515; --line:#222; --pill-radius:9999px;
+    --danger:#ff3b3b; --success:#1a621a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  button{border:none;cursor:pointer}
+
+  /* INTRO BIG DOT */
+  #introOverlay{
+    position:fixed;inset:0;background:#000;display:grid;place-items:center;z-index:9999;
+  }
+  .dotWrap{position:relative;width:260px;height:260px}
+  .bigDot{
+    position:absolute;inset:0;margin:auto;width:100%;height:100%;background:#000;border-radius:50%;
+    box-shadow:0 0 100px rgba(0,0,0,.6);
+    display:grid;place-items:center;transition:transform .8s cubic-bezier(.2,.8,.2,1),opacity .3s ease;
+  }
+  .bigDot button{
+    width:140px;height:140px;border-radius:50%;display:grid;place-items:center;
+    background:#fff;color:#000;font-weight:800;letter-spacing:.6px;border:6px solid rgba(0,0,0,.06);
+    font-size:15px;text-align:center;
+  }
+  .bigDot button span{line-height:1;}
+  .dotWrap:active .bigDot{transform:scale(.98)}
+  .dotHide{transform:scale(40);opacity:0.9}
+  .hidden{display:none !important}
+
+  /* Header */
+  header{
+    position:sticky;top:0;z-index:50;background:rgba(13,13,13,.7);backdrop-filter:saturate(180%) blur(8px);
+    border-bottom:1px solid var(--line);padding:12px 0;
+  }
+  .container{max-width:1200px;margin:0 auto;padding:0 16px}
+  .row{display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:12px;padding:6px 0}
+  .brand img{width:120px;height:auto;object-fit:contain} /* bigger logo */
+  nav{display:flex;align-items:center;gap:18px}
+  nav a{padding:8px 10px;color:var(--fg)}
+  .spacer{flex:1}
+  .iconBtn{position:relative;background:transparent;padding:8px;border-radius:10px}
+  .iconBtn:hover{background:#1b1b1b}
+  .badge{
+    position:absolute;top:4px;right:4px;background:#fff;color:#000;font-size:11px;
+    padding:2px 6px;border-radius:10px;font-weight:700;min-width:20px;text-align:center
+  }
+
+  /* HERO */
+  .hero{
+    position:relative;isolation:isolate;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#0d0d0d 0%,#0b0b0b 100%);
+  }
+  .heroInner{display:grid;grid-template-columns:1fr;gap:24px;padding:64px 0}
+  .hero h1{font-size:clamp(28px,4vw,48px);margin:0 0 8px 0}
+  .sub{color:var(--muted);margin-bottom:20px}
+  .ctaPrimary{
+    background:#fff;color:#000;border-radius:var(--pill-radius);padding:14px 24px;font-weight:700;
+  }
+  .bannerImg{
+    .bannerImg img {
+  width: 100%;          /* stretch across the banner width */
+  height: 100%;         /* fill banner height */
+  object-fit: cover;    /* crop image proportionally */
+  object-position: center; /* keep the subject centered */
+  display: block;
+}
+  }
+
+  /* Grid / products */
+  .section{padding:48px 0;border-bottom:1px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  @media (max-width:768px){.grid{grid-template-columns:1fr}}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    display:flex;flex-direction:column
+  }
+  .cardImg{aspect-ratio:1/1.1;background:#111;display:grid;place-items:center;color:#666}
+  .cardBody{padding:14px}
+  .title{font-weight:700;margin:0 0 4px 0;display:flex;align-items:center;gap:8px}
+  .lowStock{background:var(--danger);color:#fff;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;text-transform:lowercase}
+  .muted{color:var(--muted)}
+  .pill{border-radius:var(--pill-radius);padding:10px 16px;font-weight:700}
+  .pill.white{background:#fff;color:#000}
+  .inline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .space{height:12px}
+
+  /* Product modal (quick view) */
+  .modal{
+    position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);z-index:60;
+  }
+  .modal.open{display:grid}
+  .modalCard{
+    width:min(980px,94vw);background:#101010;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    display:grid;grid-template-columns:1fr 1fr;gap:0;
+  }
+  @media (max-width:900px){.modalCard{grid-template-columns:1fr}}
+  .gallery{background:#0f0f0f;border-right:1px solid var(--line);padding:14px}
+  .galleryMain{aspect-ratio:1/1;border:1px solid var(--line);border-radius:14px;overflow:contain;background:#0a0a0a;display:grid;place-items:center}
+  .thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .thumbs img{width:100%;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+  .pBody{padding:18px}
+  .optGroup{margin:12px 0}
+  .optLabel{font-size:13px;color:var(--muted);margin-bottom:8px}
+  .swatches{display:flex;gap:8px}
+  .swatch{
+    padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:#151515;color:#fff;cursor:pointer
+  }
+  .swatch.active{background:#fff;color:#000}
+  .sizes{display:flex;gap:8px;flex-wrap:wrap}
+  .size{padding:10px 14px;border:1px solid var(--line);border-radius:999px;cursor:pointer}
+  .size.active{background:#fff;color:#000}
+  .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .outline{background:transparent;border:1px solid #2a2a2a;color:#fff}
+  .full{background:#fff;color:#000}
+  .linksBar{
+    margin-top:18px;padding-top:14px;border-top:1px dashed #2a2a2a;display:flex;gap:18px;flex-wrap:wrap
+  }
+  .linksBar a{border-bottom:1px dotted #6a6a6a}
+
+  /* Cart drawer */
+  #cartDrawer{
+    position:fixed;top:0;right:0;width:min(420px,92vw);height:100dvh;background:#0f0f0f;border-left:1px solid var(--line);
+    transform:translateX(100%);transition:transform .35s ease;z-index:70;display:flex;flex-direction:column
+  }
+  #cartDrawer.open{transform:translateX(0)}
+  .drawerHead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .drawerBody{flex:1;overflow:auto;padding:16px}
+  .drawerFoot{padding:16px;border-top:1px solid var(--line)}
+  .rowItem{display:flex;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+  .qty{display:flex;align-items:center;gap:8px}
+  .qty button{width:28px;height:28px;border-radius:999px;background:#1b1b1b;color:#fff}
+  .totalLine{display:flex;justify-content:space-between;margin:8px 0}
+  .note{color:var(--muted);font-size:12px}
+
+  /* Checkout */
+  #checkout{padding:32px 16px}
+  .checkoutWrap{max-width:980px;margin:0 auto;display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+  @media (max-width:900px){.checkoutWrap{grid-template-columns:1fr}}
+  .panel{background:#101010;border:1px solid var(--line);border-radius:18px;padding:16px}
+  .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:700px){.formGrid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column}
+  .field input, .field select, .field textarea{
+    background:#0c0c0c;border:1px solid #242424;color:#fff;padding:12px;border-radius:12px
+  }
+  .submitBtn{margin-top:12px;width:100%;padding:14px;border-radius:var(--pill-radius);font-weight:800;background:#fff;color:#000}
+
+  /* Footer/socials */
+  footer{padding:32px 0}
+  .socials{display:flex;gap:14px;align-items:center;justify-content:center;margin:14px 0}
+  .tiny{font-size:12px;color:var(--muted);text-align:center}
+  .center{text-align:center}
+
+  /* Modals for images (policy / size chart) */
+  .imgModal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;place-items:center;z-index:90}
+  .imgModal.open{display:grid}
+  .imgCard{width:min(920px,94vw);background:#0f0f0f;border:1px solid var(--line);border-radius:14px;padding:8px}
+  .imgCard img{width:100%;height:100%;border-radius:8px}
+
+  /* utils */
+  .mutedSmall{color:var(--muted);font-size:13px}
+  .voucherRow{display:flex;gap:8px;margin-top:10px}
+  .voucherRow input{flex:1;padding:10px;border-radius:10px;background:#0b0b0b;border:1px solid #242424;color:#fff}
+  .appliedTag{background:var(--success);color:#fff;padding:6px 8px;border-radius:8px;font-weight:700;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- INTRO BIG DOT -->
+<div id="introOverlay" aria-hidden="true">
+  <div class="dotWrap" id="dotWrap">
+    <div class="bigDot" id="bigDot">
+      <button id="dotCta" aria-label="Shop Now"></button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="container row">
+    <div class="brand">
+      <img src="noqta-logo.png" alt="NOQTA logo" id="headerLogo"/>
+      <strong>NOQTA</strong>
+    </div>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#collection">Collection</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="iconBtn search" title="Search" aria-label="Search">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#fff" stroke-width="2"/><path d="M20 20L16.65 16.65" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <button class="iconBtn" id="openCart" aria-label="Cart">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6h15l-1.5 9h-12z" stroke="#fff" stroke-width="2"/><circle cx="9" cy="20" r="1.5" fill="#fff"/><circle cx="18" cy="20" r="1.5" fill="#fff"/></svg>
+      <span class="badge" id="cartBadge">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section id="home" class="hero">
+  <div class="container heroInner">
+    <div>
+      <h1>WEAR THE DOT. OWN THE MOVE.</h1>
+      <p class="sub">Minimal. Modern. Made to move.</p>
+      <a href="#collection" class="ctaPrimary">Shop Now</a>
+      <div class="bannerImg">
+       <div class="bannerImg">
+  <img src="Screenshot 2025-08-25 015144.png" alt="Hero Banner" />
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COLLECTION -->
+<section id="collection" class="section">
+  <div class="container">
+    <h2 style="margin:0 0 16px 0;">Collection</h2>
+    <div class="grid">
+      <!-- Legacy Tee -->
+      <div class="card">
+        <div class="cardImg">
+          <img src="IMG_2823.JPG" alt="Legacy Tee placeholder" onerror="this.parentElement.textContent='Legacy Tee Image Placeholder';this.remove()">
+        </div>
+        <div class="cardBody">
+          <div class="title"><span>Legacy Tee</span><span class="lowStock">nearly out of stock</span></div>
+          <div class="muted">549 LE</div>
+          <div class="space"></div>
+          <div class="inline">
+            <button class="pill white" onclick="openProduct('legacy')">View</button>
+            <button class="pill outline" onclick="quickAdd('legacy')">Quick add</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Righteous Tee -->
+      <div class="card">
+        <div class="cardImg">
+          <img src="IMG_2765.JPG" alt="Righteous Tee placeholder" onerror="this.parentElement.textContent='Righteous Tee Image Placeholder';this.remove()">
+        </div>
+        <div class="cardBody">
+          <div class="title"><span>Righteous Tee</span><span class="lowStock">nearly out of stock</span></div>
+          <div class="muted">499 LE</div>
+          <div class="space"></div>
+          <div class="inline">
+            <button class="pill white" onclick="openProduct('righteous')">View</button>
+            <button class="pill outline" onclick="quickAdd('righteous')">Quick add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT / SOCIALS -->
+<section id="contact" class="section">
+  <div class="container">
+    <h2 style="margin:0 0 10px">Contact</h2>
+    <p class="muted">Questions? Collaborations? Reach out or find us on social.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container center">
+    <img src="noqta-logo.png" alt="NOQTA logo" style="width:90px;height:auto;object-fit:contain;margin:0 auto 10px"/>
+    <div class="socials">
+      <a href="https://www.instagram.com/_noqta._/?hl=en" target="_blank" aria-label="Instagram">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="#fff" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="#fff"/></svg>
+      </a>
+      <a href="https://www.tiktok.com/@_noqta._" target="_blank" aria-label="TikTok">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M14 4v7.5a4.5 4.5 0 1 1-3.5-4.4V10" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M14 4c.7 2.1 2.4 3.6 4.5 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      </a>
+      <a href="https://www.facebook.com/profile.php?id=61578112793433" target="_blank" aria-label="Facebook">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M14 8h2V5h-2c-2 0-3 .9-3 3v2H9v3h2v6h3v-6h2.2l.3-3H14V8c0-.7.3-1 1-1z" fill="#fff"/></svg>
+      </a>
+      <a href="mailto:noqta.clothes@gmail.com" aria-label="Email">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#fff" stroke-width="2"/><path d="M4 7l8 6 8-6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      </a>
+    </div>
+
+    <div class="tiny">
+      <a href="#" onclick="openImgModal('policy')">Return Policy</a>
+      &nbsp;•&nbsp;
+      <a href="#" onclick="openImgModal('sizeChart')">Size Chart</a>
+    </div>
+    <div class="tiny" style="margin-top:10px">© 2025 NOQTA</div>
+  </div>
+</footer>
+
+<!-- PRODUCT MODAL -->
+<div class="modal" id="productModal" role="dialog" aria-modal="true" aria-label="Product">
+  <div class="modalCard">
+    <div class="gallery">
+      <div class="galleryMain">
+        <img id="mainImg" src="" alt="Product image" />
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+    <div class="pBody">
+      <h3 id="pTitle" style="margin:0 0 6px">
+        <span id="pTitleText"></span>
+        <span id="pLowStock" class="lowStock" style="margin-left:10px;display:none">nearly out of stock</span>
+      </h3>
+      <div class="muted" id="pPrice"></div>
+
+      <div class="optGroup">
+        <div class="optLabel">Color</div>
+        <div class="swatches" id="colorSwatches"></div>
+      </div>
+
+      <div class="optGroup">
+        <div class="optLabel">Size</div>
+        <div class="sizes" id="sizeSwatches"></div>
+      </div>
+
+      <div class="actions">
+        <button class="pill full" id="btnAdd">Add to cart</button>
+        <button class="pill outline" onclick="closeProduct()">Close</button>
+      </div>
+
+      <div class="linksBar">
+        <a href="#" onclick="openImgModal('sizeChart')">View Size Chart</a>
+        <a href="#" onclick="openImgModal('policy')">Return Policy</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<aside id="cartDrawer" aria-label="Cart">
+  <div class="drawerHead">
+    <strong>Cart</strong>
+    <button class="iconBtn" onclick="toggleCart(false)" aria-label="Close cart">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="drawerBody" id="cartItems"></div>
+  <div class="drawerFoot">
+    <div class="totalLine"><span>Subtotal</span><strong id="subTotal">0 LE</strong></div>
+    <div id="discountLine" class="totalLine" style="display:none"><span>Discount</span><strong id="discountAmount">0 LE</strong></div>
+    <div class="totalLine"><span>Delivery</span><strong id="deliveryFee">75 LE</strong></div>
+    <div class="totalLine"><span>Total</span><strong id="grandTotal">75 LE</strong></div>
+    <div class="note">Prices include 14% VAT.</div>
+    <a href="#checkout"><button class="pill full" style="width:100%;margin-top:10px" onclick="toggleCart(false)">Proceed to Checkout</button></a>
+  </div>
+</aside>
+
+<!-- CHECKOUT -->
+<section id="checkout" class="section">
+  <div class="container">
+    <h2 style="margin:0 0 14px">Checkout</h2>
+    <div class="checkoutWrap">
+      <div class="panel">
+        <h3 style="margin-top:0">Contact & Shipping</h3>
+        <form id="checkoutForm">
+          <div class="formGrid">
+            <div class="field"><label>First name</label><input required id="firstName" name="firstName" /></div>
+            <div class="field"><label>Last name</label><input required id="lastName" name="lastName" /></div>
+            <div class="field"><label>Phone</label><input required id="phone" name="phone" /></div>
+            <div class="field"><label>Email</label><input required type="email" id="email" name="email" /></div>
+            <div class="field"><label>City</label><input required id="city" name="city" /></div>
+            <div class="field"><label>Address</label><input required id="address" name="address" /></div>
+            <div class="field" style="grid-column:1 / -1"><label>Postal code (optional)</label><input id="postal" name="postal" /></div>
+          </div>
+
+          <div style="margin:14px 0;padding:12px;border:1px dashed #2a2a2a;border-radius:12px">
+            <strong>Cash on Delivery</strong> — payment is collected at your door.
+          </div>
+
+          <button class="submitBtn" type="submit">Submit Order</button>
+        </form>
+        
+
+      <div class="panel">
+        <h3 style="margin-top:0">Order Summary</h3>
+        <div id="summaryList"></div>
+
+        <div class="totalLine"><span>Subtotal</span><strong id="summarySub">0 LE</strong></div>
+        <div id="summaryDiscountLine" class="totalLine" style="display:none"><span>Discount</span><strong id="summaryDiscount">0 LE</strong></div>
+
+        <div class="totalLine"><span>Delivery</span><strong>75 LE</strong></div>
+        <div class="totalLine"><span>Total</span><strong id="summaryGrand">75 LE</strong></div>
+
+        <div class="note">Prices include 14% VAT.</div>
+
+        <div style="margin-top:12px">
+          <div class="mutedSmall">Have a voucher code?</div>
+          <div class="voucherRow">
+            <input id="voucherInput" placeholder="Enter voucher code" />
+            <button class="pill white" id="applyVoucherBtn" type="button">Apply</button>
+            <div id="voucherAppliedTag" style="display:none" class="appliedTag">APPLIED</div>
+          </div>
+          
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMAGE MODALS -->
+<div class="imgModal" id="modalPolicy">
+  <div class="imgCard">
+    <img src="Return-Refund policy.jpg" alt="Return Policy" onerror="this.replaceWith(document.createTextNode('Return-Refund Policy image not found'))">
+  </div>
+</div>
+<div class="imgModal" id="modalSizeChart">
+  <div class="imgCard">
+    <img src="size chart.jpg" alt="Size Chart" onerror="this.replaceWith(document.createTextNode('Size chart image not found'))">
+  </div>
+</div>
+
+<!-- EmailJS loader (used to send confirmation email to customer) -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<script>
+/* ================== CONFIG ================== */
+/* Formspree endpoints in rotation */
+const FORM_ENDPOINTS = [
+  "https://formspree.io/f/meokndya",   // primary form (used 0..44)
+  "https://formspree.io/f/mvgqvybe",   // secondary (45..89)
+  "https://formspree.io/f/mgvzqjjr"    // tertiary (90..134)
+];
+const SUBMISSIONS_PER_FORM = 45;
+const DELIVERY_FEE = 75;
+
+/* EmailJS */
+const EMAILJS_SERVICE = "service_abc123";
+const EMAILJS_TEMPLATE = "template_2q59l09";
+const EMAILJS_PUBLIC = "hfQAXMgKqAiJM2-39";
+
+/* Initialize EmailJS */
+(function(){
+  if(window.emailjs){
+    try{ emailjs.init(EMAILJS_PUBLIC); console.log("EmailJS initialized"); }catch(e){ console.warn("EmailJS init failed", e); }
+  } else {
+    console.warn("EmailJS library not loaded");
+  }
+})();
+
+/* ================== PRODUCT DATA ================== */
+const products = {
+  legacy: {
+    id:'legacy',
+    title:'Legacy Tee',
+    price:549,
+    colors:['black','white'],
+    sizes:['S','M','L'],
+    images:{
+      black:[
+
+        'IMG_2682.JPG',
+        'IMG_2847.JPG'
+      ],
+      white:[
+        'IMG_2708.JPG',
+        'IMG_2823.JPG'
+      ]
+    }
+  },
+  righteous: {
+    id:'righteous',
+    title:'Righteous Tee',
+    price:499,
+    colors:['black','white'],
+    sizes:['S','M','L'],
+    images:{
+      black:[
+        'IMG_2765.JPG',
+	'IMG_2809.JPG'
+
+
+       
+      ],
+      white:[
+        'IMG_2734.JPG',
+        'IMG_2819.JPG'
+       
+      ]
+    }
+  }
+};
+
+/* ================== INTRO ================== */
+const introOverlay = document.getElementById('introOverlay');
+const bigDot = document.getElementById('bigDot');
+const dotCta = document.getElementById('dotCta');
+function playIntro(){
+  bigDot.classList.add('dotHide');
+  setTimeout(()=>introOverlay.classList.add('hidden'), 850);
+}
+dotCta.addEventListener('click', playIntro);
+setTimeout(()=>{ if(!introOverlay.classList.contains('hidden')) playIntro(); }, 6000);
+
+/* ================== PRODUCT MODAL ================== */
+let activeProduct = null;
+let selectedColor = null;
+let selectedSize = null;
+
+const modal = document.getElementById('productModal');
+const mainImg = document.getElementById('mainImg');
+const thumbs = document.getElementById('thumbs');
+const pTitleText = document.getElementById('pTitleText');
+const pLowStock = document.getElementById('pLowStock');
+const pPrice = document.getElementById('pPrice');
+const colorSwatches = document.getElementById('colorSwatches');
+const sizeSwatches = document.getElementById('sizeSwatches');
+const btnAdd = document.getElementById('btnAdd');
+
+function openProduct(key){
+  const p = products[key];
+  if(!p) return;
+  activeProduct = p;
+  selectedColor = p.colors[0];
+  selectedSize = p.sizes[0];
+  pTitleText.textContent = p.title;
+  pPrice.textContent = p.price + ' LE';
+  pLowStock.style.display = 'inline-block';
+  renderColorSwatches();
+  renderSizeSwatches();
+  renderGallery();
+  modal.classList.add('open');
+}
+function closeProduct(){ modal.classList.remove('open'); pLowStock.style.display = 'none'; }
+
+function renderColorSwatches(){
+  colorSwatches.innerHTML = '';
+  activeProduct.colors.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'swatch' + (c===selectedColor?' active':'');
+    b.textContent = c[0].toUpperCase()+c.slice(1);
+    b.onclick = ()=>{ selectedColor=c; renderColorSwatches(); renderGallery(); };
+    colorSwatches.appendChild(b);
+  });
+}
+function renderSizeSwatches(){
+  sizeSwatches.innerHTML = '';
+  activeProduct.sizes.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'size' + (s===selectedSize?' active':'');
+    b.textContent = s;
+    b.onclick = ()=>{ selectedSize=s; renderSizeSwatches(); };
+    sizeSwatches.appendChild(b);
+  });
+}
+function renderGallery(){
+  const arr = activeProduct.images[selectedColor];
+  mainImg.src = arr[0];
+  thumbs.innerHTML = '';
+  arr.forEach(src=>{
+    const im = document.createElement('img');
+    im.src = src;
+    im.onclick = ()=>{ mainImg.src = src; };
+    thumbs.appendChild(im);
+  });
+}
+btnAdd.addEventListener('click', ()=>{
+  addToCart({
+    id: activeProduct.id+'_'+selectedColor+'_'+selectedSize,
+    sku: activeProduct.id,
+    name: activeProduct.title,
+    price: activeProduct.price,
+    color: selectedColor,
+    size: selectedSize,
+    qty: 1,
+    img: activeProduct.images[selectedColor][0]
+  });
+  closeProduct();
+  toggleCart(true);
+});
+
+/* quick add (uses default color/size) */
+function quickAdd(key){
+  const p = products[key];
+  addToCart({
+    id: p.id+'_'+p.colors[0]+'_'+p.sizes[0],
+    sku: p.id,
+    name: p.title,
+    price: p.price,
+    color: p.colors[0],
+    size: p.sizes[0],
+    qty: 1,
+    img: p.images[p.colors[0]][0]
+  });
+  toggleCart(true);
+}
+
+/* ================== CART ================== */
+const openCartBtn = document.getElementById('openCart');
+const cartDrawer = document.getElementById('cartDrawer');
+const cartItemsEl = document.getElementById('cartItems');
+const cartBadge = document.getElementById('cartBadge');
+const subTotalEl = document.getElementById('subTotal');
+const grandTotalEl = document.getElementById('grandTotal');
+const summaryList = document.getElementById('summaryList');
+const summarySub = document.getElementById('summarySub');
+const summaryGrand = document.getElementById('summaryGrand');
+const discountLine = document.getElementById('discountLine');
+const discountAmountEl = document.getElementById('discountAmount');
+const summaryDiscountLine = document.getElementById('summaryDiscountLine');
+const summaryDiscount = document.getElementById('summaryDiscount');
+
+openCartBtn.addEventListener('click', ()=>toggleCart(true));
+function toggleCart(open){ cartDrawer.classList.toggle('open', open); }
+
+function loadCart(){
+  return JSON.parse(localStorage.getItem('noqta_cart')||'[]');
+}
+function saveCart(items){
+  localStorage.setItem('noqta_cart', JSON.stringify(items));
+}
+
+/* voucher state */
+let appliedVoucher = null; // {code,rate}
+function applyVoucher(code){
+  const upper = (code||'').trim().toUpperCase();
+  if(!upper){ alert('Enter a voucher code.'); return; }
+  if(upper === 'NOQTA15'){
+    appliedVoucher = { code: 'NOQTA15', rate: 0.15 };
+    document.getElementById('voucherAppliedTag').style.display = 'inline-block';
+    document.getElementById('voucherInput').disabled = true;
+    document.getElementById('applyVoucherBtn').disabled = true;
+    renderCart();
+    alert('Voucher applied: 15% off products subtotal.');
+  } else {
+    alert('Invalid voucher code.');
+  }
+}
+
+function removeVoucher(){
+  appliedVoucher = null;
+  document.getElementById('voucherAppliedTag').style.display = 'none';
+  document.getElementById('voucherInput').disabled = false;
+  document.getElementById('applyVoucherBtn').disabled = false;
+  renderCart();
+}
+
+function addToCart(item){
+  const items = loadCart();
+  const idx = items.findIndex(i=>i.id===item.id);
+  if(idx>=0){ items[idx].qty += 1; }
+  else{ items.push(item); }
+  saveCart(items);
+  renderCart();
+}
+function updateQty(id,delta){
+  const items = loadCart();
+  const i = items.find(x=>x.id===id);
+  if(!i) return;
+  i.qty += delta;
+  if(i.qty<=0){ items.splice(items.indexOf(i),1); }
+  saveCart(items);
+  renderCart();
+}
+function calculateTotals(items){
+  const sub = items.reduce((a,b)=>a + b.price*b.qty, 0);
+  const discount = appliedVoucher ? Math.round(sub * appliedVoucher.rate) : 0;
+  const grand = sub - discount + (items.length ? DELIVERY_FEE : 0);
+  return { sub, discount, grand };
+}
+function renderCart(){
+  const items = loadCart();
+  const count = items.reduce((a,b)=>a+b.qty,0);
+  cartBadge.textContent = count;
+  cartItemsEl.innerHTML = '';
+  let sub = 0;
+  if(items.length === 0){
+    cartItemsEl.innerHTML = '<div class="tiny">Your cart is empty.</div>';
+  } else {
+    items.forEach(it=>{
+      sub += it.price*it.qty;
+      const row = document.createElement('div');
+      row.className='rowItem';
+      row.innerHTML = `
+        <img src="${it.img}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:10px"/>
+        <div style="flex:1">
+          <div><strong>${it.name} <span style="color:var(--muted);font-weight:600">(${it.color}/${it.size})</span> <span class="lowStock" style="margin-left:8px">nearly out of stock</span></strong></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;align-items:center">
+            <div class="qty">
+              <button onclick="updateQty('${it.id}',-1)">−</button>
+              <div>${it.qty}</div>
+              <button onclick="updateQty('${it.id}',1)">+</button>
+            </div>
+            <div><strong>${it.price*it.qty} LE</strong></div>
+          </div>
+        </div>
+      `;
+      cartItemsEl.appendChild(row);
+    });
+  }
+  const totals = calculateTotals(items);
+  subTotalEl.textContent = totals.sub + ' LE';
+  if(totals.discount > 0){
+    discountLine.style.display = 'flex';
+    discountAmountEl.textContent = '-' + totals.discount + ' LE';
+    summaryDiscountLine.style.display = 'flex';
+    summaryDiscount.textContent = '-' + totals.discount + ' LE';
+  } else {
+    discountLine.style.display = 'none';
+    summaryDiscountLine.style.display = 'none';
+  }
+  grandTotalEl.textContent = totals.grand + ' LE';
+  // checkout summary
+  summaryList.innerHTML = items.map(it=>(
+    `<div class="totalLine"><span>${it.name} (${it.color}/${it.size}) × ${it.qty}</span><strong>${it.price*it.qty} LE</strong></div>`
+  )).join('') || '<div class="tiny">Your cart is empty.</div>';
+  summarySub.textContent = totals.sub + ' LE';
+  summaryGrand.textContent = totals.grand + ' LE';
+}
+renderCart();
+
+/* ================== IMAGE MODALS ================== */
+const modalPolicy = document.getElementById('modalPolicy');
+const modalSize = document.getElementById('modalSizeChart');
+function openImgModal(which){
+  (which==='policy'?modalPolicy:modalSize).classList.add('open');
+}
+[modalPolicy,modalSize].forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+
+/* ================== Voucher handlers ================== */
+document.getElementById('applyVoucherBtn').addEventListener('click', ()=> applyVoucher(document.getElementById('voucherInput').value));
+document.getElementById('voucherInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); applyVoucher(e.target.value); } });
+
+/* ================== Formspree rotation helpers ================== */
+/* submissionCount persisted in localStorage */
+function getSubmissionCount(){
+  return parseInt(localStorage.getItem('noqta_form_submissions') || '0', 10);
+}
+function incrementSubmissionCount(){
+  const cur = getSubmissionCount() + 1;
+  localStorage.setItem('noqta_form_submissions', String(cur));
+  return cur;
+}
+function getFormIndexForCount(count){
+  const idx = Math.floor(count / SUBMISSIONS_PER_FORM);
+  return Math.min(idx, FORM_ENDPOINTS.length - 1);
+}
+function getCurrentFormEndpoint(){
+  const count = getSubmissionCount();
+  return FORM_ENDPOINTS[getFormIndexForCount(count)];
+}
+
+/* ================== CHECKOUT (Formspree + EmailJS direct HTML) ================== */
+document.getElementById('checkoutForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const items = loadCart();
+  if(!items.length){ alert('Your cart is empty.'); return; }
+
+  // collect form data
+  const payload = {
+    firstName: document.getElementById('firstName').value.trim(),
+    lastName: document.getElementById('lastName').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    city: document.getElementById('city').value.trim(),
+    address: document.getElementById('address').value.trim(),
+    postal: document.getElementById('postal').value.trim(),
+  };
+
+  // totals
+  const sub = items.reduce((s,i)=>s+i.price*i.qty,0);
+  const discountValue = appliedVoucher ? Math.round(sub * appliedVoucher.rate) : 0;
+  const totalVal = sub - discountValue + DELIVERY_FEE;
+
+  // prepare payload to Formspree
+  const formspreePayload = {
+    name: payload.firstName + ' ' + payload.lastName,
+    email: payload.email,
+    phone: payload.phone,
+    city: payload.city,
+    address: payload.address,
+    postal: payload.postal || '',
+    order: items.map(i=>`${i.name} - ${i.color}/${i.size} x${i.qty} = ${i.price*i.qty} LE`).join('\n'),
+    subtotal: sub + ' LE',
+    discount: (discountValue ? ('-' + discountValue + ' LE') : '0 LE'),
+    delivery: DELIVERY_FEE + ' LE',
+    total: totalVal + ' LE',
+    payment: 'Cash on Delivery',
+    voucher: appliedVoucher ? appliedVoucher.code : 'NONE'
+  };
+
+  // Decide which Formspree endpoint to use
+  const endpoint = getCurrentFormEndpoint();
+  console.log("Submitting to Formspree endpoint:", endpoint);
+
+  try{
+    // POST to Formspree (JSON)
+    const resp = await fetch(endpoint, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(formspreePayload)
+    });
+
+    if(!resp.ok){
+      const txt = await resp.text().catch(()=>null);
+      console.error('Formspree submission failed', resp.status, txt);
+      throw new Error('Formspree submission error');
+    }
+
+    // increment the submission counter only after successful send
+    const newCount = incrementSubmissionCount();
+    console.log("Formspree submission count updated:", newCount);
+
+    // Send confirmation email to customer via EmailJS (we send full HTML in message_html to avoid template caching)
+    const customerName = formspreePayload.name || 'Customer';
+    const customerEmail = formspreePayload.email;
+
+    // Build a nice HTML email (logo URL may require a public host — replace if needed)
+    const logoUrl = location.origin + '/noqta-logo.png'; // tries to use site-hosted logo
+    const emailHtml = buildConfirmationEmailHTML({
+      toName: customerName,
+      orderLines: formspreePayload.order,
+      subtotal: formspreePayload.subtotal,
+      discount: formspreePayload.discount,
+      delivery: formspreePayload.delivery,
+      total: formspreePayload.total,
+      logoUrl
+    });
+
+    const templateParams = {
+      to_name: customerName,
+      to_email: customerEmail,
+      order_summary: formspreePayload.order,
+      subtotal: formspreePayload.subtotal,
+      discount: formspreePayload.discount,
+      delivery: formspreePayload.delivery,
+      total: formspreePayload.total,
+      message_html: emailHtml,
+      logo_url: logoUrl
+    };
+
+    let emailSent = false;
+    if(window.emailjs && EMAILJS_SERVICE && EMAILJS_TEMPLATE){
+      try{
+        await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams);
+        emailSent = true;
+        console.log("EmailJS confirmation sent");
+      }catch(err){
+        emailSent = false;
+        console.warn("EmailJS send failed", err);
+      }
+    } else {
+      console.warn("EmailJS not available/ configured");
+    }
+
+    // final UX
+    alert('Thank you! Your order was submitted.' + (emailSent ? ' A confirmation email was sent.' : ' (Confirmation email not sent.)'));
+
+    // reset UI + storage
+    localStorage.removeItem('noqta_cart');
+    removeVoucher();
+    renderCart();
+    document.getElementById('checkoutForm').reset();
+    window.location.hash = '#home';
+  }catch(err){
+    console.error(err);
+    alert('Something went wrong submitting your order. Please try again.');
+  }
+});
+
+/* ================== Confirmation email HTML builder ================== */
+function buildConfirmationEmailHTML({toName, orderLines, subtotal, discount, delivery, total, logoUrl}){
+  // orderLines is a string with \n. We'll wrap it for HTML.
+  const orderHtml = orderLines.split('\n').map(line => `<div style="margin-bottom:6px;">${escapeHtml(line)}</div>`).join('');
+  return `
+  <!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>NOQTA Order Confirmation</title>
+  </head>
+  <body style="font-family:Inter,Arial,sans-serif;margin:0;padding:0;background:#f4f4f5;">
+    <div style="max-width:680px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,.08);">
+      <div style="background:#000;padding:24px;text-align:center;">
+        <img src="${escapeHtml(logoUrl)}" alt="NOQTA" style="max-width:160px;height:auto;display:block;margin:0 auto 8px" />
+      </div>
+
+      <div style="padding:22px;color:#111;">
+        <h2 style="margin:0 0 8px;font-size:20px;">Hi ${escapeHtml(toName)},</h2>
+        <p style="margin:0 0 14px;color:#333;">Thanks for shopping with <strong>NOQTA</strong> 🖤 — here are the details of your order.</p>
+
+        <div style="background:#f7f7f8;padding:12px;border-radius:8px;margin-bottom:12px;">
+          <div style="font-weight:700;margin-bottom:8px;">Order summary</div>
+          ${orderHtml}
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;"><div>Subtotal</div><div>${escapeHtml(subtotal)}</div></div>
+          <div style="display:flex;justify-content:space-between;"><div>Discount</div><div>${escapeHtml(discount)}</div></div>
+          <div style="display:flex;justify-content:space-between;"><div>Delivery</div><div>${escapeHtml(delivery)}</div></div>
+          <hr style="border:none;border-top:1px solid #eee;margin:12px 0;">
+          <div style="display:flex;justify-content:space-between;font-weight:800;"><div>Total</div><div>${escapeHtml(total)}</div></div>
+        </div>
+
+        <p style="color:#333;margin:12px 0;">Our courier will contact you once your order is out for delivery. Estimated delivery window: <strong>2–6 working days</strong>.</p>
+
+        <p style="font-size:13px;color:#666;margin:12px 0;">If you have any questions, simply reply to this email and we'll help.</p>
+
+        <div style="text-align:center;margin-top:16px;">
+          <a href="https://www.instagram.com/_noqta._/?hl=en" style="margin:0 8px;display:inline-block;text-decoration:none;">
+            <img alt="Instagram" src="data:image/svg+xml;utf8,${encodeURIComponent(instagramSVG())}" style="width:36px;height:36px;display:inline-block">
+          </a>
+          <a href="https://www.tiktok.com/@_noqta._" style="margin:0 8px;display:inline-block;text-decoration:none;">
+            <img alt="TikTok" src="data:image/svg+xml;utf8,${encodeURIComponent(tiktokSVG())}" style="width:36px;height:36px;display:inline-block">
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61578112793433" style="margin:0 8px;display:inline-block;text-decoration:none;">
+            <img alt="Facebook" src="data:image/svg+xml;utf8,${encodeURIComponent(facebookSVG())}" style="width:36px;height:36px;display:inline-block">
+          </a>
+        </div>
+
+        <p style="text-align:center;color:#999;font-size:13px;margin-top:18px;">Stay stylish,<br/>The NOQTA Team</p>
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
+}
+
+/* small helpers */
+function escapeHtml(s){
+  if(!s && s !== 0) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+/* inline SVG icons as strings for embedding into email as data-URIs */
+function instagramSVG(){ return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='2' y='2' width='20' height='20' rx='5' fill='#E1306C'/><circle cx='12' cy='12' r='3.6' fill='#fff'/><circle cx='17.4' cy='6.4' r='0.9' fill='#fff'/></svg>`; }
+function tiktokSVG(){ return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='2' y='2' width='20' height='20' rx='5' fill='#000'/><path d='M14.4 6.2v5.1a4.5 4.5 0 1 1-3-4.4v-3.2' fill='#69C9D0'/><path d='M14.4 6.2c0 0 1.5.6 2.2 1.1' fill='#EE1D52'/></svg>`; }
+function facebookSVG(){ return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='2' y='2' width='20' height='20' rx='3' fill='#1877F2'/><path d='M15 8h-2V6.2c0-.7.4-1.2 1.2-1.2H15V3.4h-1.3C11.8 3.4 11 4.5 11 6.1V8H9v2.6h2v7h2.5v-7H15V8z' fill='#fff'/></svg>`; }
+
+/* ================== PREVIEW MODAL CLOSE ON BACKDROP ================== */
+modal.addEventListener('click', (e)=>{ if(e.target===modal) closeProduct(); });
+
+/* ================== HELPERS FOR IMAGE MODALS ================== */
+function openImgModal(which){
+  if(which === 'policy') modalPolicy.classList.add('open');
+  else modalSize.classList.add('open');
+}
+function closeImgModal(which){
+  if(which === 'policy') modalPolicy.classList.remove('open');
+  else modalSize.classList.remove('open');
+}
+window.addEventListener('click', (e)=>{
+  document.querySelectorAll('.modal, .imgModal').forEach(m=>{
+    if(e.target===m) m.classList.remove('open');
+  });
+});
+
+/* ================== NOTES LOG ================== */
+console.log("NOQTA shop loaded. Formspree rotation endpoints:", FORM_ENDPOINTS);
+</script>
+</body>
+</html>
