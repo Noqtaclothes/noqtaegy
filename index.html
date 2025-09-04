@@ -626,13 +626,13 @@ let appliedVoucher = null; // {code,rate}
 function applyVoucher(code){
   const upper = (code||'').trim().toUpperCase();
   if(!upper){ alert('Enter a voucher code.'); return; }
-  if(upper === 'NOQTA15'){
-    appliedVoucher = { code: 'NOQTA15', rate: 0.15 };
+  if(upper === 'NOQTA40'){
+    appliedVoucher = { code: 'NOQTA40', rate: 0.40 };
     document.getElementById('voucherAppliedTag').style.display = 'inline-block';
     document.getElementById('voucherInput').disabled = true;
     document.getElementById('applyVoucherBtn').disabled = true;
     renderCart();
-    alert('Voucher applied: 15% off products subtotal.');
+    alert('Voucher applied: 40% off products subtotal.');
   } else {
     alert('Invalid voucher code.');
   }
@@ -966,4 +966,5 @@ console.log("NOQTA shop loaded. Formspree rotation endpoints:", FORM_ENDPOINTS);
 </script>
 </body>
 </html>
+
 
