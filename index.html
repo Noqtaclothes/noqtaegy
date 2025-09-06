@@ -97,7 +97,7 @@
 
   /* Product modal (quick view) */
   .modal{
-    position:center;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);z-index:60;
+    position:centered;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);z-index:60;
   }
   .modal.open{display:grid}
   .modalCard{
@@ -237,7 +237,10 @@
         </div>
         <div class="cardBody">
           <div class="title"><span>Legacy Tee</span><span class="lowStock">nearly out of stock</span></div>
-          <div class="muted">549 LE</div>
+            <p>
+  <del style="color: #888; text-decoration: line-through;">549EGP</del>
+  <span style="color: #c00; font-weight: bold;">349EGP</span>
+</p>
           <div class="space"></div>
           <div class="inline">
             <button class="pill white" onclick="openProduct('legacy')">View</button>
@@ -253,8 +256,10 @@
         </div>
         <div class="cardBody">
           <div class="title"><span>Righteous Tee</span><span class="lowStock">nearly out of stock</span></div>
-          <div class="muted">499 LE</div>
-          <div class="space"></div>
+       <p>
+  <del style="color: #888; text-decoration: line-through;">499EGP</del>
+  <span style="color: #c00; font-weight: bold;">299EGP</span>
+</p>     <div class="space"></div>
           <div class="inline">
             <button class="pill white" onclick="openProduct('righteous')">View</button>
             <button class="pill outline" onclick="quickAdd('righteous')">Quick add</button>
@@ -351,8 +356,8 @@
   <div class="drawerFoot">
     <div class="totalLine"><span>Subtotal</span><strong id="subTotal">0 LE</strong></div>
     <div id="discountLine" class="totalLine" style="display:none"><span>Discount</span><strong id="discountAmount">0 LE</strong></div>
-    <div class="totalLine"><span>Delivery</span><strong id="deliveryFee">75 LE</strong></div>
-    <div class="totalLine"><span>Total</span><strong id="grandTotal">75 LE</strong></div>
+    <div class="totalLine"><span>Delivery</span><strong id="deliveryFee">TBD</strong></div>
+    <div class="totalLine"><span>Total</span><strong id="grandTotal">0</strong></div>
     <div class="note">Prices include 14% VAT.</div>
     <a href="#checkout"><button class="pill full" style="width:100%;margin-top:10px" onclick="toggleCart(false)">Proceed to Checkout</button></a>
   </div>
@@ -391,8 +396,8 @@
         <div class="totalLine"><span>Subtotal</span><strong id="summarySub">0 LE</strong></div>
         <div id="summaryDiscountLine" class="totalLine" style="display:none"><span>Discount</span><strong id="summaryDiscount">0 LE</strong></div>
 
-        <div class="totalLine"><span>Delivery</span><strong>75 LE</strong></div>
-        <div class="totalLine"><span>Total</span><strong id="summaryGrand">75 LE</strong></div>
+        <div class="totalLine"><span>Delivery</span><strong>TBD(To Be Determined)</strong></div>
+        <div class="totalLine"><span>Total</span><strong id="summaryGrand">Null</strong></div>
 
         <div class="note">Prices include 14% VAT.</div>
 
@@ -432,8 +437,7 @@ const FORM_ENDPOINTS = [
   "https://formspree.io/f/mvgqvybe",   // secondary (45..89)
   "https://formspree.io/f/mgvzqjjr"    // tertiary (90..134)
 ];
-const SUBMISSIONS_PER_FORM = 45;
-const DELIVERY_FEE = 75;
+const DELIVERY_FEE = TBD;
 
 /* EmailJS */
 const EMAILJS_SERVICE = "service_abc123";
@@ -454,7 +458,7 @@ const products = {
   legacy: {
     id:'legacy',
     title:'Legacy Tee',
-    price:549,
+    price:349,
     colors:['black','white'],
     sizes:['S','M','L'],
     images:{
@@ -472,7 +476,7 @@ const products = {
   righteous: {
     id:'righteous',
     title:'Righteous Tee',
-    price:499,
+    price:299,
     colors:['black','white'],
     sizes:['S','M','L'],
     images:{
@@ -626,13 +630,13 @@ let appliedVoucher = null; // {code,rate}
 function applyVoucher(code){
   const upper = (code||'').trim().toUpperCase();
   if(!upper){ alert('Enter a voucher code.'); return; }
-  if(upper === 'NOQTA40'){
-    appliedVoucher = { code: 'NOQTA40', rate: 0.40 };
+  if(upper === 'NOQTA15'){
+    appliedVoucher = { code: 'NOQTA15', rate: 0.15 };
     document.getElementById('voucherAppliedTag').style.display = 'inline-block';
     document.getElementById('voucherInput').disabled = true;
     document.getElementById('applyVoucherBtn').disabled = true;
     renderCart();
-    alert('Voucher applied: 40% off products subtotal.');
+    alert('Voucher applied: 15% off products subtotal.');
   } else {
     alert('Invalid voucher code.');
   }
@@ -666,7 +670,7 @@ function updateQty(id,delta){
 function calculateTotals(items){
   const sub = items.reduce((a,b)=>a + b.price*b.qty, 0);
   const discount = appliedVoucher ? Math.round(sub * appliedVoucher.rate) : 0;
-  const grand = sub - discount + (items.length ? DELIVERY_FEE : 0);
+  const grand = sub - discount;
   return { sub, discount, grand };
 }
 function renderCart(){
@@ -784,7 +788,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async (e)=>{
     order: items.map(i=>`${i.name} - ${i.color}/${i.size} x${i.qty} = ${i.price*i.qty} LE`).join('\n'),
     subtotal: sub + ' LE',
     discount: (discountValue ? ('-' + discountValue + ' LE') : '0 LE'),
-    delivery: DELIVERY_FEE + ' LE',
+    delivery: 'TBD',
     total: totalVal + ' LE',
     payment: 'Cash on Delivery',
     voucher: appliedVoucher ? appliedVoucher.code : 'NONE'
@@ -966,5 +970,3 @@ console.log("NOQTA shop loaded. Formspree rotation endpoints:", FORM_ENDPOINTS);
 </script>
 </body>
 </html>
-
-
